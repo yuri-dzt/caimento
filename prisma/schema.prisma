@@ -1,0 +1,171 @@
+generator client {
+  provider      = "prisma-client-js"
+  output        = "../server/generated/prisma"
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum AccountType {
+  ADMIN
+  OWNER
+  EMPLOYEE
+}
+
+enum FabricType {
+  COTTON
+  LINEN
+  KNIT
+  SILK
+  SATIN
+  CREPE
+  CHIFFON
+  DENIM
+  LACE
+  VISCOSE
+  WOOL
+  LEATHER
+  OTHER
+}
+
+enum SimulationType {
+  FABRIC_SWAP
+  TRY_ON
+}
+
+enum SimulationStatus {
+  PENDING
+  PROCESSING
+  DONE
+  FAILED
+}
+
+/// Loja, ateliê ou costureira (tenant)
+model Account {
+  id        String   @id @default(cuid())
+  name      String   @db.VarChar(120)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  users       User[]
+  fabrics     Fabric[]
+  garments    Garment[]
+  customers   Customer[]
+  simulations Simulation[]
+
+  @@map("accounts")
+}
+
+model User {
+  id           String      @id @default(cuid())
+  accountId    String?     @map("account_id")
+  name         String      @db.VarChar(120)
+  email        String      @unique @db.VarChar(191)
+  passwordHash String      @map("password_hash") @db.VarChar(255)
+  accountType  AccountType @map("account_type")
+  /// CSV de view,create,edit,delete
+  role         String      @default("view") @db.VarChar(64)
+  active       Boolean     @default(true)
+  createdAt    DateTime    @default(now()) @map("created_at")
+  updatedAt    DateTime    @updatedAt @map("updated_at")
+
+  account     Account?     @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  simulations Simulation[]
+
+  @@index([accountId])
+  @@map("users")
+}
+
+/// Tecido disponível na loja (foto + tipo)
+model Fabric {
+  id          String     @id @default(cuid())
+  accountId   String     @map("account_id")
+  name        String     @db.VarChar(120)
+  fabricType  FabricType @map("fabric_type")
+  description String?    @db.VarChar(500)
+  imageKey    String     @map("image_key") @db.VarChar(255)
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
+
+  account     Account      @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  simulations Simulation[]
+
+  @@index([accountId, createdAt])
+  @@map("fabrics")
+}
+
+/// Peça de referência (foto do modelo desejado)
+model Garment {
+  id          String   @id @default(cuid())
+  accountId   String   @map("account_id")
+  name        String   @db.VarChar(120)
+  description String?  @db.VarChar(500)
+  imageKey    String   @map("image_key") @db.VarChar(255)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  account     Account      @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  simulations Simulation[]
+
+  @@index([accountId, createdAt])
+  @@map("garments")
+}
+
+/// Cliente final (foto para o provador virtual, com consentimento LGPD)
+model Customer {
+  id             String    @id @default(cuid())
+  accountId      String    @map("account_id")
+  name           String    @db.VarChar(120)
+  phone          String?   @db.VarChar(30)
+  notes          String?   @db.VarChar(500)
+  photoKey       String?   @map("photo_key") @db.VarChar(255)
+  photoConsentAt DateTime? @map("photo_consent_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  account     Account      @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  simulations Simulation[]
+
+  @@index([accountId, name])
+  @@map("customers")
+}
+
+model Simulation {
+  id                 String           @id @default(cuid())
+  accountId          String           @map("account_id")
+  createdById        String?          @map("created_by_id")
+  type               SimulationType
+  status             SimulationStatus @default(PENDING)
+  garmentId          String?          @map("garment_id")
+  fabricId           String?          @map("fabric_id")
+  customerId         String?          @map("customer_id")
+  /// TRY_ON: simulação de troca de tecido cuja imagem será vestida na cliente
+  sourceSimulationId String?          @map("source_simulation_id")
+  instructions       String?          @db.VarChar(1000)
+  resultKey          String?          @map("result_key") @db.VarChar(255)
+  errorMessage       String?          @map("error_message") @db.VarChar(500)
+  provider           String?          @db.VarChar(40)
+  model              String?          @db.VarChar(80)
+  attempts           Int              @default(0)
+  startedAt          DateTime?        @map("started_at")
+  completedAt        DateTime?        @map("completed_at")
+  createdAt          DateTime         @default(now()) @map("created_at")
+  updatedAt          DateTime         @updatedAt @map("updated_at")
+
+  account          Account      @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  createdBy        User?        @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  garment          Garment?     @relation(fields: [garmentId], references: [id], onDelete: SetNull)
+  fabric           Fabric?      @relation(fields: [fabricId], references: [id], onDelete: SetNull)
+  customer         Customer?    @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  sourceSimulation Simulation?  @relation("SimulationSource", fields: [sourceSimulationId], references: [id], onDelete: SetNull)
+  derived          Simulation[] @relation("SimulationSource")
+
+  @@index([accountId, createdAt])
+  @@index([status])
+  @@index([customerId])
+  @@map("simulations")
+}

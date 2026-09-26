@@ -1,0 +1,150 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * Tokens do Caimento: parede de linhas do armarinho.
+ * Fundo = expositor (branco frio com furos de pegboard), tinta = linha azul-marinho,
+ * destaque = linha carmim (a costura). Cada tipo de tecido tem a cor de um carretel.
+ */
+@layer base {
+  :root {
+    --background: 220 22% 97%; /* #f5f6f9 */
+    --foreground: 230 38% 13%; /* #151a2e */
+    --card: 0 0% 100%;
+    --card-foreground: 230 38% 13%;
+    --muted: 222 18% 93%; /* #eaecf1 */
+    --muted-foreground: 226 13% 38%; /* #545a6e */
+    --accent: 230 45% 94%; /* #e9ecf8 */
+    --accent-foreground: 232 55% 26%;
+    --primary: 232 55% 27%; /* #1f2869 linha marinho */
+    --primary-foreground: 0 0% 100%;
+    --stitch: 350 76% 44%; /* #c41b3b linha carmim */
+    --rack: 222 20% 90%; /* furos do expositor */
+    --destructive: 356 72% 44%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 152 58% 29%;
+    --warning: 34 92% 36%;
+    --border: 222 16% 87%;
+    --input: 222 14% 80%;
+    --ring: 232 55% 45%;
+    --shadow: 230 40% 12%;
+    --wall: 232 55% 20%; /* #172055 expositor do login */
+    --spool-cap: 36 30% 82%;
+    --spool-core: 36 25% 70%;
+
+    /* carretéis (tipos de tecido) */
+    --thread-sky: 202 70% 46%;
+    --thread-flax: 40 55% 48%;
+    --thread-violet: 266 48% 52%;
+    --thread-rose: 340 65% 52%;
+    --thread-plum: 300 35% 38%;
+    --thread-teal: 178 60% 32%;
+    --thread-lilac: 250 45% 66%;
+    --thread-indigo: 226 58% 36%;
+    --thread-blush: 8 65% 62%;
+    --thread-orange: 24 85% 50%;
+    --thread-moss: 90 35% 36%;
+    --thread-brown: 24 40% 34%;
+    --thread-slate: 220 10% 50%;
+
+    color-scheme: light;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --background: 230 26% 8%; /* #0f111a */
+      --foreground: 222 25% 93%;
+      --card: 230 22% 12%;
+      --card-foreground: 222 25% 93%;
+      --muted: 230 18% 16%;
+      --muted-foreground: 224 14% 68%;
+      --accent: 232 30% 20%;
+      --accent-foreground: 228 80% 88%;
+      --primary: 230 85% 74%; /* linha lavanda clara */
+      --primary-foreground: 232 50% 12%;
+      --stitch: 350 85% 64%;
+      --rack: 230 18% 13%;
+      --destructive: 356 80% 62%;
+      --destructive-foreground: 230 30% 8%;
+      --success: 152 50% 55%;
+      --warning: 38 90% 60%;
+      --border: 230 16% 21%;
+      --input: 230 14% 30%;
+      --ring: 230 85% 74%;
+      --shadow: 230 60% 2%;
+      --wall: 232 42% 13%;
+      --spool-cap: 36 18% 62%;
+      --spool-core: 36 14% 48%;
+
+      --thread-sky: 202 75% 62%;
+      --thread-flax: 42 60% 62%;
+      --thread-violet: 266 60% 70%;
+      --thread-rose: 340 75% 68%;
+      --thread-plum: 300 35% 62%;
+      --thread-teal: 176 55% 50%;
+      --thread-lilac: 250 60% 78%;
+      --thread-indigo: 226 70% 68%;
+      --thread-blush: 8 75% 72%;
+      --thread-orange: 26 90% 62%;
+      --thread-moss: 90 38% 55%;
+      --thread-brown: 26 40% 58%;
+      --thread-slate: 220 12% 64%;
+
+      color-scheme: dark;
+    }
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: 'cv11', 'ss01';
+    /* furos do expositor de linhas, bem discretos */
+    background-image: radial-gradient(hsl(var(--rack)) 1.2px, transparent 1.6px);
+    background-size: 22px 22px;
+    background-attachment: fixed;
+  }
+
+  :focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer components {
+  /* costura pesponto: borda tracejada das áreas de foto */
+  .stitch-frame {
+    background-image:
+      linear-gradient(90deg, hsl(var(--input)) 55%, transparent 0),
+      linear-gradient(90deg, hsl(var(--input)) 55%, transparent 0),
+      linear-gradient(0deg, hsl(var(--input)) 55%, transparent 0),
+      linear-gradient(0deg, hsl(var(--input)) 55%, transparent 0);
+    background-size: 12px 1.5px, 12px 1.5px, 1.5px 12px, 1.5px 12px;
+    background-position: 0 6px, 0 calc(100% - 6px), 6px 0, calc(100% - 6px) 0;
+    background-repeat: repeat-x, repeat-x, repeat-y, repeat-y;
+  }
+
+  .scrollbar-none {
+    scrollbar-width: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+}
